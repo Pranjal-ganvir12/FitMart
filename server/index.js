@@ -6,8 +6,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const app = express();
 const port = process.env.PORT || 5000;
-const allowedOrigin =
-  process.env.ALLOWED_ORIGIN;
+const allowedOrigin = process.env.ALLOWED_ORIGIN || "";
 const allowedOrigins = allowedOrigin
   .split(",")
   .map((s) => s.trim())
