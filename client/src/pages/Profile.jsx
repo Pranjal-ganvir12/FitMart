@@ -138,6 +138,10 @@ export default function Profile() {
           addresses: data.addresses || [],
           defaultAddressId: data.defaultAddressId,
         });
+        // Load saved photo URL from database
+        if (data.photoURL) {
+          setPhotoURL(data.photoURL);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -173,6 +177,50 @@ export default function Profile() {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    setError(null);
+    setSaving(true);
+
+    try {
+      // Upload photo via backend endpoint
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${API}/api/user/upload-photo/${user.uid}`, {
+        method: "POST",
+        headers: {
+          "Authorization": headers.Authorization,
+        },
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to upload photo");
+      }
+
+      const data = await res.json();
+      const photoURL = data.photoURL;
+
+      // Update local state with returned photo URL
+      setPhotoURL(photoURL);
+      setToast("Profile photo updated successfully");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -244,7 +292,7 @@ export default function Profile() {
               >
                 ✎
               </button>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" />
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
             </div>
             <div className="flex-1">
               <p className="text-xs tracking-[0.2em] uppercase text-stone-400 mb-1">Account</p>
