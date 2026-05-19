@@ -141,6 +141,9 @@ app.use("/api/payment", require("./routes/payment"));
 // Nearby fitness centers
 app.use("/api/fitness-centers", require("./routes/fitnessCenters"));
 
+// Proxy GitHub stats to avoid client-side rate limits and CORS errors
+app.use("/api/github", require("./routes/github"));
+
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get("/", (req, res) => res.send("FitMart server running"));
 

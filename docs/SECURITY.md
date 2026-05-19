@@ -35,7 +35,7 @@ FitMart is currently in active development. Security fixes are applied to the la
 
 Instead, report vulnerabilities through one of these private channels:
 
-- **GitHub Private Advisory:** Go to the [Security tab](https://github.com/parthnarkar/FitMart/security/advisories/new) of the repository and open a new private advisory *(recommended)*.
+- **GitHub Private Advisory:** Go to the [Security tab](https://github.com/parthbuilds-community/FitMart/security/advisories/new) of the repository and open a new private advisory *(recommended)*.
 - **Email:** Send a detailed report to **parthnarkarofficial@gmail.com** with the subject line `[FitMart Security] <brief description>`.
 
 ---

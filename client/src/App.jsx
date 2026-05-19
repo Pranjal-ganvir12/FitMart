@@ -24,6 +24,8 @@ import NonAdminRoute from "./components/NonAdminRoute";
 import WorkoutNotes from "./pages/NotesPage";
 import WorkoutTracker from "./pages/TrackerPage";
 import ExercisePage from "./pages/ExercisePage";
+import LegalTerms from "./pages/LegalTerms";
+import LegalPrivacy from "./pages/LegalPrivacy";
 
 export default function App() {
   return (
@@ -44,6 +46,8 @@ export default function App() {
         <Route path="/tracker" element={<NonAdminRoute><WorkoutTracker /></NonAdminRoute>} />
         <Route path="/notes" element={<NonAdminRoute><WorkoutNotes /></NonAdminRoute>} />
         <Route path="/exercises" element={<NonAdminRoute><ExercisePage /></NonAdminRoute>} />
+        <Route path="/terms" element={<NonAdminRoute><LegalTerms /></NonAdminRoute>} />
+        <Route path="/privacy-policy" element={<NonAdminRoute><LegalPrivacy /></NonAdminRoute>} />
 
         {/* Admin routes (guarded) */}
         <Route

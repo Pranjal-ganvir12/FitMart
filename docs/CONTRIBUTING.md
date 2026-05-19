@@ -64,7 +64,7 @@ If this is your first time contributing to open source, follow every step below.
 
 ### Step 1: Fork the Repository
 
-Go to the [FitMart GitHub page](https://github.com/parthnarkar/FitMart) and click the **Fork** button (top right corner).
+Go to the [FitMart GitHub page](https://github.com/parthbuilds-community/FitMart) and click the **Fork** button (top right corner).
 
 This creates your own copy of the project under your GitHub account.
 
@@ -86,7 +86,7 @@ cd FitMart
 This connects your local copy to the original FitMart repo so you can pull in future updates:
 
 ```bash
-git remote add upstream https://github.com/parthnarkar/FitMart.git
+git remote add upstream https://github.com/parthbuilds-community/FitMart.git
 ```
 
 Verify it worked:
@@ -135,7 +135,7 @@ git push origin main
 
 ### Finding Issues to Work On
 
-Browse the [Issues tab](https://github.com/parthnarkar/FitMart/issues) and look for these labels:
+Browse the [Issues tab](https://github.com/parthbuilds-community/FitMart/issues) and look for these labels:
 
 | Label | Meaning |
 |-------|---------|
@@ -271,7 +271,7 @@ chore: update dependencies
 
 Once your changes are pushed to your fork:
 
-1. Go to the original [FitMart repo](https://github.com/parthnarkar/FitMart).
+1. Go to the original [FitMart repo](https://github.com/parthbuilds-community/FitMart).
 2. You'll see a **"Compare & pull request"** banner — click it.
 3. Fill out the PR template completely (see below).
 4. Set the base branch to `main`.

@@ -85,7 +85,7 @@ const InstagramIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
-const GITHUB_REPO = "https://github.com/parthnarkar/FitMart";
+const GITHUB_REPO = "https://github.com/parthbuilds-community/FitMart";
 const INSTAGRAM = "https://instagram.com/parth.builds";
 
 export default function LandingPage() {
@@ -175,6 +175,8 @@ export default function LandingPage() {
         navOpaque={navOpaque}
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
+        ghStats={ghStats}
+        ghLoading={ghLoading}
       />
 
       {/* ── HERO ── */}
@@ -247,7 +249,7 @@ export default function LandingPage() {
                 <span>Star on GitHub</span>
                 <span className="bg-stone-100 text-stone-700 text-xs px-2 py-0.5 rounded-full
                                    font-medium min-w-7 text-center group-hover:bg-stone-800">
-                  105
+                  {formatStat(ghStats.stars, ghLoading)}
                 </span>
               </a>
             </div>
@@ -609,7 +611,7 @@ export default function LandingPage() {
 }
 
 // ── NavbarWithGithub — extends Navbar with a GitHub star button ────────────
-function NavbarWithGithub({ navOpaque, menuOpen, setMenuOpen }) {
+function NavbarWithGithub({ navOpaque, menuOpen, setMenuOpen, ghStats, ghLoading }) {
   const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
 
@@ -620,7 +622,7 @@ function NavbarWithGithub({ navOpaque, menuOpen, setMenuOpen }) {
   }, []);
 
   const isOpaque = navOpaque || scrollY > 60;
-  const textColor = isOpaque ? "text-stone-900" : "text-white";
+  const textColor = "text-stone-900";
   const mutedColor = isOpaque ? "text-stone-500" : "text-white/70";
   const borderColor = isOpaque ? "border-stone-200" : "border-white/20";
   const bgClass = isOpaque
@@ -660,7 +662,7 @@ function NavbarWithGithub({ navOpaque, menuOpen, setMenuOpen }) {
             <span>Star</span>
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium
                                 ${isOpaque ? "bg-stone-100 text-stone-700" : "bg-white/10 text-white/70"}`}>
-              105
+              {formatStat(ghStats.stars, ghLoading)}
             </span>
           </a>
 

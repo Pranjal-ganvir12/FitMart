@@ -56,7 +56,7 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    console.log("Processing message:", message.substring(0, 50));
+    console.log("Processing chat message:", { length: message.length, timestamp: Date.now() });
 
     const prompt = `${SYSTEM_PROMPT}\n\nUser: ${message}`;
 

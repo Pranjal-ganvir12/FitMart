@@ -266,7 +266,7 @@ export default function Authentication() {
           FitMart
         </button>
         <a
-          href="https://github.com/parthnarkar/FitMart"
+          href="https://github.com/parthbuilds-community/FitMart"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm text-white border border-stone-600 px-3 py-1 rounded-md hover:border-white transition"
@@ -437,8 +437,22 @@ export default function Authentication() {
 
               <p className="text-[11px] text-stone-400 text-center leading-relaxed">
                 By creating an account you agree to our{" "}
-                <span className="underline cursor-pointer">Terms</span> and{" "}
-                <span className="underline cursor-pointer">Privacy Policy</span>.
+                <button
+                  type="button"
+                  onClick={() => navigate("/terms")}
+                  className="underline cursor-pointer"
+                >
+                  Terms
+                </button>
+                {" "}and{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/privacy-policy")}
+                  className="underline cursor-pointer"
+                >
+                  Privacy Policy
+                </button>
+                .
               </p>
             </form>
           )}
