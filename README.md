@@ -373,6 +373,13 @@ React Router route guards using `useAuth` and `VITE_ADMIN_UID` to protect admin 
 Make sure you have the following installed:
 
 - [Node.js](https://nodejs.org/) v16+
+
+# Optional: Redis caching for products API
+# When set, the server will use Redis to cache product-list responses.
+# Use `REDIS_URL` for a full Redis connection string (e.g. redis://localhost:6379)
+# or `REDIS_HOST` for a host-only configuration. TTL (seconds) is configurable:
+# PRODUCTS_CACHE_TTL=60
+
 - [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 - A [MongoDB](https://www.mongodb.com/atlas) connection (Atlas or local)
 - A [Firebase](https://firebase.google.com/) project (for auth)
@@ -652,11 +659,26 @@ cd server && npm start
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| `GET` | `/api/products` | — | List all products (sorted by `productId`) |
+| `GET` | `/api/products` | — | Paginated product listing with filtering/sorting/search and optional field projection. Supports `page`, `limit`, `category`, `search`, `sort`, `fields`. Use `?all=true` for legacy full-list behavior (avoid in production). See `docs/PRODUCTS_API.md` for full details. |
 | `GET` | `/api/products/:id` | — | Get product by `productId` |
-| `POST` | `/api/products` | ✅ Admin | Create a new product |
-| `PUT` | `/api/products/:id` | ✅ Admin | Update product by `productId` |
-| `DELETE` | `/api/products/:id` | ✅ Admin | Delete product by `productId` |
+| `POST` | `/api/products` | ✅ Admin | Create a new product (invalidates products cache) |
+| `PUT` | `/api/products/:id` | ✅ Admin | Update product by `productId` (invalidates products cache) |
+| `DELETE` | `/api/products/:id` | ✅ Admin | Delete product by `productId` (invalidates products cache) |
+
+### Pagination & Caching
+
+- **Paginated endpoint:** `/api/products` now returns paginated results and supports filtering, sorting, search, and field projection. Query params: `page`, `limit`, `category`, `search`, `sort`, `fields`. For full details and examples see [docs/PRODUCTS_API.md](docs/PRODUCTS_API.md).
+- **Backward compatibility:** `?all=true` retains the old behavior of returning all products; avoid in production.
+- **Caching:** Server supports optional Redis caching for product-list queries. Configure with `REDIS_URL` or `REDIS_HOST`. TTL is controlled by `PRODUCTS_CACHE_TTL` (seconds, default 60). Cache is invalidated on product create/update/delete and after seeding.
+
+### Frontend — React Query
+
+- The client integrates `@tanstack/react-query` for product list fetching and caching. The homepage uses an infinite scroll / "See More" pattern powered by `useInfiniteQuery`. See `client/src/hooks/useInfiniteProducts.js`.
+
+### Tests
+
+- **Server unit tests:** `cd server && npm test` (Jest + Supertest). Tests mock external services (Firebase, Redis) and verify pagination metadata, cache behavior, and conditional `ETag` handling.
+- **E2E (planned):** Playwright/Cypress tests should validate infinite loading, `JSON-LD` structured data presence, and the "See More" flow.
 
 ### 🛒 Cart
 

@@ -1,5 +1,6 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LandingPage from "./pages/LandingPage";
 import Authentication from "./pages/Authentication";
 import HomePage from "./pages/HomePage";
@@ -30,93 +31,96 @@ import LegalPrivacy from "./pages/LegalPrivacy";
 import DevAdminLogin from "./components/DevAdminLogin";
 
 export default function App() {
- return (
-  <ErrorBoundary>
-    <BrowserRouter>
-      <Routes>
-        {/* Public routes (redirect admin users to admin dashboard) */}
-        <Route path="/" element={<NonAdminRoute><LandingPage /></NonAdminRoute>} />
-        <Route path="/auth" element={<Authentication />} />
-        <Route path="/home" element={<NonAdminRoute><HomePage /></NonAdminRoute>} />
-        <Route path="/product/:productId" element={<NonAdminRoute><ProductPage /></NonAdminRoute>} />
-        <Route path="/checkout" element={<NonAdminRoute><Checkout /></NonAdminRoute>} />
-        <Route path="/profile" element={<NonAdminRoute><Profile /></NonAdminRoute>} />
-        <Route path="/payment" element={<NonAdminRoute><Payment /></NonAdminRoute>} />
-        <Route path="/payment-confirmation" element={<NonAdminRoute><ProductConfirmation /></NonAdminRoute>} />
-        <Route path="/plans/weight-loss" element={<WeightLossPlans />} />
-        <Route path="/plans/muscle-building" element={<MuscleBuildingPlans />} />
-        <Route path="/plans/mobility-recovery" element={<MobilityRecoveryPlans />} />
-        <Route path="/tracker" element={<NonAdminRoute><WorkoutTracker /></NonAdminRoute>} />
-        <Route path="/notes" element={<NonAdminRoute><WorkoutNotes /></NonAdminRoute>} />
-        <Route path="/exercises" element={<NonAdminRoute><ExercisePage /></NonAdminRoute>} />
-        <Route path="/terms" element={<NonAdminRoute><LegalTerms /></NonAdminRoute>} />
-        <Route path="/privacy-policy" element={<NonAdminRoute><LegalPrivacy /></NonAdminRoute>} />
+  const queryClient = new QueryClient();
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes (redirect admin users to admin dashboard) */}
+            <Route path="/" element={<NonAdminRoute><LandingPage /></NonAdminRoute>} />
+            <Route path="/auth" element={<Authentication />} />
+            <Route path="/home" element={<NonAdminRoute><HomePage /></NonAdminRoute>} />
+            <Route path="/product/:productId" element={<NonAdminRoute><ProductPage /></NonAdminRoute>} />
+            <Route path="/checkout" element={<NonAdminRoute><Checkout /></NonAdminRoute>} />
+            <Route path="/profile" element={<NonAdminRoute><Profile /></NonAdminRoute>} />
+            <Route path="/payment" element={<NonAdminRoute><Payment /></NonAdminRoute>} />
+            <Route path="/payment-confirmation" element={<NonAdminRoute><ProductConfirmation /></NonAdminRoute>} />
+            <Route path="/plans/weight-loss" element={<WeightLossPlans />} />
+            <Route path="/plans/muscle-building" element={<MuscleBuildingPlans />} />
+            <Route path="/plans/mobility-recovery" element={<MobilityRecoveryPlans />} />
+            <Route path="/tracker" element={<NonAdminRoute><WorkoutTracker /></NonAdminRoute>} />
+            <Route path="/notes" element={<NonAdminRoute><WorkoutNotes /></NonAdminRoute>} />
+            <Route path="/exercises" element={<NonAdminRoute><ExercisePage /></NonAdminRoute>} />
+            <Route path="/terms" element={<NonAdminRoute><LegalTerms /></NonAdminRoute>} />
+            <Route path="/privacy-policy" element={<NonAdminRoute><LegalPrivacy /></NonAdminRoute>} />
 
-        {/* Admin routes (guarded) */}
-        {import.meta.env.MODE === 'development' && (
-          <Route path="/dev-login" element={<DevAdminLogin />} />
-        )}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/reports"
-          element={
-            <AdminRoute>
-              <AdminReports />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/marketing"
-          element={
-            <AdminRoute>
-              <AdminMarketing />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/bugs"
-          element={
-            <AdminRoute>
-              <AdminBugs />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/customers"
-          element={
-            <AdminRoute>
-              <AdminCustomers />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/customers/:userId"
-          element={
-            <AdminRoute>
-              <AdminCustomerDetail />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/inventory"
-          element={
-            <AdminRoute>
-              <AdminInventory />
-            </AdminRoute>
-          }
-        />
+            {/* Admin routes (guarded) */}
+            {import.meta.env.MODE === 'development' && (
+              <Route path="/dev-login" element={<DevAdminLogin />} />
+            )}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/reports"
+              element={
+                <AdminRoute>
+                  <AdminReports />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/marketing"
+              element={
+                <AdminRoute>
+                  <AdminMarketing />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/bugs"
+              element={
+                <AdminRoute>
+                  <AdminBugs />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/customers"
+              element={
+                <AdminRoute>
+                  <AdminCustomers />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/customers/:userId"
+              element={
+                <AdminRoute>
+                  <AdminCustomerDetail />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/inventory"
+              element={
+                <AdminRoute>
+                  <AdminInventory />
+                </AdminRoute>
+              }
+            />
 
-        {/* Redirect unknown routes to NotFound */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+            {/* Redirect unknown routes to NotFound */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </BrowserRouter>
-  </ErrorBoundary>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

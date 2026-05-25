@@ -1,5 +1,5 @@
 // src/pages/HomePage.jsx
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, memo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { signOut } from "firebase/auth";
@@ -15,6 +15,7 @@ import CalorieCalculator from "../components/CalorieCalculator";
 import NearbyFitnessCenters from "../components/NearbyFitnessCenters";
 import Stars from "../components/Stars";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
+import useInfiniteProducts from "../hooks/useInfiniteProducts";
 import CategoryPillsSkeleton from "../components/CategoryPillsSkeleton";
 
 
@@ -44,7 +45,7 @@ function mapCart(cartDoc, products) {
 }
 
 // ── ProductCard ───────────────────────────────────────────────────────────
-function ProductCard({ product, onAdd, cartItems = [], updateQty }) {
+const ProductCard = memo(function ProductCard({ product, onAdd, cartItems = [], updateQty }) {
   const navigate = useNavigate();
   const [added, setAdded] = useState(false);
   const cartItem = cartItems.find(item => item.id === (product.productId || product.id));
@@ -76,6 +77,7 @@ function ProductCard({ product, onAdd, cartItems = [], updateQty }) {
         {product.image ? (
           <img
             src={product.image} alt={product.name}
+            loading="lazy" decoding="async"
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             onError={e => { e.currentTarget.onerror = null; e.currentTarget.style.display = "none"; }}
           />
@@ -170,7 +172,7 @@ function ProductCard({ product, onAdd, cartItems = [], updateQty }) {
       </div>
     </div>
   );
-}
+});
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
@@ -209,24 +211,30 @@ export default function HomePage() {
     return () => unsub();
   }, [navigate]);
 
+  // React Query: infinite products
+  const {
+    data: pagesData,
+    isLoading: rqLoading,
+    isError: rqError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteProducts({ limit: 24 });
+
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setBackendError(false);
-      try {
-        const res = await fetch(`${API}/api/products`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        setProducts(data.map(p => ({ ...p, id: p.productId || p.id })));
-      } catch (err) {
-        console.error("Error loading products:", err);
-        setBackendError(true);
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    setLoading(rqLoading);
+    setBackendError(rqError);
+  }, [rqLoading, rqError]);
+
+  // Flatten pages into products array
+  const loadedProducts = useMemo(() => {
+    if (!pagesData || !pagesData.pages) return [];
+    return pagesData.pages.flatMap(p => p.data.map(it => ({ ...it, id: it.productId || it.id })));
+  }, [pagesData]);
+
+  useEffect(() => {
+    setProducts(loadedProducts);
+  }, [loadedProducts]);
 
   useEffect(() => {
     if (!user || !products.length) return;
@@ -309,28 +317,28 @@ export default function HomePage() {
   });
 
   const renderProductGrid = () => {
-  if (loading) return (
-  <>
-    {/* Skeleton category pills */}
-    <div className="flex gap-2 mb-5 sm:mb-8 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
-      {["w-12", "w-24", "w-20", "w-24"].map((w, i) => (
-        <div
-          key={i}
-          className={`bg-stone-200 animate-pulse h-8 ${w} rounded-full flex-shrink-0`}
-          style={{ animationDelay: `${i * 60}ms` }}
-        />
-      ))}
-    </div>
+    if (loading) return (
+      <>
+        {/* Skeleton category pills */}
+        <div className="flex gap-2 mb-5 sm:mb-8 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
+          {["w-12", "w-24", "w-20", "w-24"].map((w, i) => (
+            <div
+              key={i}
+              className={`bg-stone-200 animate-pulse h-8 ${w} rounded-full flex-shrink-0`}
+              style={{ animationDelay: `${i * 60}ms` }}
+            />
+          ))}
+        </div>
 
-    {/* Skeleton product grid */}
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <ProductCardSkeleton key={i} index={i} />
-      ))}
-    </div>
-  </>
-);
-    
+        {/* Skeleton product grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <ProductCardSkeleton key={i} index={i} />
+          ))}
+        </div>
+      </>
+    );
+
     if (backendError) return (
       <div className="text-center py-12 text-stone-400">
         <p className="text-3xl mb-2">🔌</p>
@@ -366,8 +374,35 @@ export default function HomePage() {
     );
   };
 
+  // JSON-LD structured data for currently visible products
+  const jsonLd = useMemo(() => {
+    if (!products.length) return null;
+    const items = products.slice(0, 10).map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${window.location.origin}/product/${p.productId || p.id}`,
+      item: {
+        "@type": "Product",
+        name: p.name,
+        image: p.image,
+        brand: p.brand,
+        offers: {
+          "@type": "Offer",
+          price: (p.price / 100).toFixed(2),
+          priceCurrency: "INR",
+          availability: p.stock && p.stock - (p.reserved || 0) > 0 ? "http://schema.org/InStock" : "http://schema.org/OutOfStock"
+        },
+        aggregateRating: p.reviews ? { "@type": "AggregateRating", ratingValue: p.rating, reviewCount: p.reviews } : undefined,
+      }
+    }));
+    return { "@context": "http://schema.org", "@type": "ItemList", itemListElement: items };
+  }, [products]);
+
   return (
     <div className="min-h-screen bg-stone-50 font-['DM_Sans',sans-serif]">
+      {jsonLd && (
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      )}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
         .fade-in { opacity:0; transform:translateY(16px); transition:opacity .5s ease,transform .5s ease; }
@@ -470,15 +505,18 @@ export default function HomePage() {
           {renderProductGrid()}
 
           {/* "See More" button */}
-          {!backendError && !loading && activeCategory === "all" && !showAll && filtered.length > 8 && (
+          {!backendError && !loading && activeCategory === "all" && (
             <div className="mt-8 sm:mt-10 flex justify-center">
               <button
-                onClick={() => setShowAll(true)}
+                onClick={() => {
+                  if (hasNextPage) fetchNextPage(); else setShowAll(true);
+                }}
+                disabled={isFetchingNextPage}
                 className="text-sm px-8 sm:px-10 py-3 rounded-full transition-all
                            border border-stone-300 text-stone-700 hover:bg-stone-900 hover:text-white hover:border-stone-900
-                           font-medium"
+                           font-medium disabled:opacity-60"
               >
-                See More Products
+                {isFetchingNextPage ? 'Loading…' : (hasNextPage ? 'See More Products' : 'Show All Products')}
               </button>
             </div>
           )}

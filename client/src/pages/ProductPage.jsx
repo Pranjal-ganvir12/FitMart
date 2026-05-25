@@ -97,7 +97,7 @@ export default function ProductPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API}/api/products`);
+        const res = await fetch(`${API}/api/products?all=true`);
         if (!res.ok) throw new Error("Failed to load products");
         const all = res.ok ? await res.json() : [];
         const normalised = all.map(p => ({ ...p, id: p.productId }));

@@ -318,6 +318,14 @@ async function seed() {
 
     await mongoose.disconnect();
     console.log('Disconnected. Seed complete.');
+    // Clear product cache if available
+    try {
+      const cache = require('./lib/cache');
+      if (cache && cache.clearAll) await cache.clearAll();
+      console.log('Cleared product cache');
+    } catch (err) {
+      // ignore
+    }
     process.exit(0);
   } catch (err) {
     console.error('Seeding error:', err);

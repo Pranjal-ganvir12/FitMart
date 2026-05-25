@@ -55,8 +55,12 @@ services:
       - PORT=5000
       # CORS: allow requests from the Nginx client container
       - ALLOWED_ORIGIN=http://localhost
+      # Use the Redis service in this compose network for product-list caching
+      - REDIS_URL=redis://redis:6379
     depends_on:
       mongodb:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - fitmart-network
@@ -94,6 +98,22 @@ services:
         condition: service_healthy
     networks:
       - fitmart-network
+
+  # ── Redis (optional cache for products API) ─────────────────────────────────
+  redis:
+    image: redis:7
+    container_name: fitmart-redis
+    restart: on-failure
+    ports:
+      - "6379:6379"
+    networks:
+      - fitmart-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 # ── Named volumes ──────────────────────────────────────────────────────────────
 volumes:

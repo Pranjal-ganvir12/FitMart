@@ -5,11 +5,13 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   sendPasswordResetEmail,
   updateProfile,
   sendEmailVerification,
   signOut,
+  getRedirectResult,
 } from "firebase/auth";
 import { auth } from "../auth/firebase";
 import { useGithubStats } from "../utils/useGithubStats";
@@ -118,6 +120,7 @@ export default function Authentication() {
       }
       navigate(cred?.user?.uid === ADMIN_UID || cred?.user?.uid === SUPER_ADMIN_UID ? "/admin/dashboard" : "/home");
     } catch (err) {
+      console.error('handleSignIn error', err);
       setError(parseError(err.code));
     } finally {
       setLoading(false);
@@ -138,6 +141,7 @@ export default function Authentication() {
       setResendTimer(60);
       setMode("pending-verification");
     } catch (err) {
+      console.error('handleSignUp error', err);
       setError(parseError(err.code));
     } finally {
       setLoading(false);
@@ -148,14 +152,49 @@ export default function Authentication() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      const cred = await signInWithPopup(auth, provider);
-      navigate(cred?.user?.uid === ADMIN_UID || cred?.user?.uid === SUPER_ADMIN_UID ? "/admin/dashboard" : "/home");
+      let cred;
+      try {
+        cred = await signInWithPopup(auth, provider);
+      } catch (popupErr) {
+        console.error('signInWithPopup failed, attempting redirect fallback', popupErr);
+        // Common cases: popup blocked, environment doesn't support popups (embedded webviews)
+        // Fallback to redirect flow which works in blocked-popup environments.
+        try {
+          await signInWithRedirect(auth, provider);
+          // redirect will navigate away; result handled in getRedirectResult on mount
+          return;
+        } catch (redirErr) {
+          console.error('signInWithRedirect also failed', redirErr);
+          throw redirErr;
+        }
+      }
+      if (cred && cred.user) {
+        navigate(cred.user.uid === ADMIN_UID || cred.user.uid === SUPER_ADMIN_UID ? "/admin/dashboard" : "/home");
+      }
     } catch (err) {
+      console.error('handleGoogle error', err);
       setError(parseError(err.code));
     } finally {
       setLoading(false);
     }
   };
+
+  // Handle redirect result (if we used signInWithRedirect fallback)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (!mounted || !result || !result.user) return;
+        const u = result.user;
+        navigate(u.uid === ADMIN_UID || u.uid === SUPER_ADMIN_UID ? "/admin/dashboard" : "/home");
+      } catch (err) {
+        // Not an error in many cases (no redirect result), but log for debugging
+        if (err && err.code) console.error('getRedirectResult error', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [navigate]);
 
   const handleResendVerification = async () => {
     if (resendDisabled) return;
@@ -173,6 +212,7 @@ export default function Authentication() {
       setResendDisabled(true);
       setResendTimer(60);
     } catch (err) {
+      console.error('handleResendVerification error', err);
       if (err.code === "auth/too-many-requests") {
         setError("Firebase is rate-limiting requests. Please wait a few minutes before trying again.");
         setResendDisabled(true);
@@ -193,6 +233,7 @@ export default function Authentication() {
       await sendPasswordResetEmail(auth, form.email);
       setResetSent(true);
     } catch (err) {
+      console.error('handleReset error', err);
       setError(parseError(err.code));
     } finally {
       setLoading(false);
